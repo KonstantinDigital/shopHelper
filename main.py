@@ -24,10 +24,13 @@ class MainApp(App):
         return self.main_layout
 
     def on_text(self, instance, value):
-        self.txt_variants.text = value
+        self.cur.execute("""SELECT product_name FROM products 
+                            WHERE product_name != '' AND product_name LIKE '{0}%' LIMIT 1;""".format(value))
+        product_variant = self.cur.fetchall()
+        self.txt_variants.text = product_variant[0][0] if product_variant else ""
 
     def push_txt_variant(self, instance, value):
-        print(self.txt_variants.text)
+        self.txt_input.text = self.txt_variants.text
 
     def sql_connection(self):
         try:
@@ -41,6 +44,18 @@ class MainApp(App):
         self.cur.execute("CREATE TABLE IF NOT EXISTS products(id INTEGER PRIMARY KEY, product_name TEXT UNIQUE "
                          "NOT NULL, dept_name TEXT NOT NULL);")
         self.cur.execute("CREATE TABLE IF NOT EXISTS shopping_card(products_id INT UNIQUE NOT NULL);")
+        try:
+            products_list = [("Гречка", "Крупы"), ("Рис", "Крупы"), ("Манка", "Крупы"), ("Помидоры", "Овощи"),
+                             ("Огурцы", "Овощи")]
+            add_many_products = "INSERT INTO products(product_name, dept_name) VALUES(?, ?);"
+            self.cur.executemany(add_many_products, products_list)
+        except sqlite3.IntegrityError as err:
+            if str(err).startswith("UNIQUE"):
+                print("Данный вид товара уже есть в списке")
+            if str(err).startswith("NOT NULL"):
+                print("Значение NULL не допускается")
+            else:
+                print(err)
         self.conn.commit()
 
 
