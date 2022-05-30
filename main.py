@@ -16,11 +16,13 @@ class MainApp(App):
         self.txt_input.bind(text=self.on_text)
         self.txt_variants = TextInput(multiline=False, readonly=True, halign="right", font_size=30, disabled=True)
         self.txt_variants.bind(on_touch_up=self.push_txt_variant)
+        self.dept_input = TextInput(multiline=False, readonly=False, halign="right", font_size=30)
 
     def build(self):
         self.create_sql_table()
         self.main_layout.add_widget(self.txt_input)
         self.main_layout.add_widget(self.txt_variants)
+        self.main_layout.add_widget(self.dept_input)
         return self.main_layout
 
     def on_text(self, instance, value):
