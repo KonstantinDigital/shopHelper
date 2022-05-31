@@ -28,6 +28,16 @@ class MainApp(App):
         self.btn_layout = BoxLayout(size_hint=(1, .1))
         self.test_list = TextInput(multiline=True, readonly=True, halign="right", font_size=20, size_hint_y=None)
         self.prod_list = ScrollView(size_hint=(1, .4))
+        self.foot_layout = BoxLayout(size_hint=(1, .2))
+        self.num_foot_layout = BoxLayout(orientation="vertical", size_hint=(.25, 1))
+        self.num_plus = TextInput(multiline=False, halign="right", font_size=20)
+        self.num_minus = TextInput(multiline=False, halign="right", font_size=20)
+        self.btn_foot_layout = BoxLayout(orientation="vertical", size_hint=(.1, .99))
+        self.btn_plus = Button(text="+", font_size=35, size_hint_y=.50)
+        self.btn_minus = Button(text="-", font_size=70, size_hint_y=.49)
+        self.summa_input = TextInput(multiline=False, readonly=True, halign="right", font_size=50, size_hint_x=.45)
+        self.clr_button = Button(text="Очистить", pos_hint={"center_x": 0.5, "center_y": 0.49},
+                                 font_size=15, size_hint_x=.2)
 
     def build(self):
         self.create_sql_table()
@@ -35,12 +45,21 @@ class MainApp(App):
         self.main_layout.add_widget(self.txt_variants)
         self.main_layout.add_widget(self.dept_input)
         for label in self.buttons:
-            button = Button(text=label, pos_hint={"center_x": 0.5, "center_y": 0.5}, font_size=25)
+            button = Button(text=label, pos_hint={"center_x": 0.5, "center_y": 0.485}, font_size=25)
             button.bind(on_press=self.on_button_press)
             self.btn_layout.add_widget(button)
         self.main_layout.add_widget(self.btn_layout)
         self.prod_list.add_widget(self.test_list)
         self.main_layout.add_widget(self.prod_list)
+        self.num_foot_layout.add_widget(self.num_plus)
+        self.num_foot_layout.add_widget(self.num_minus)
+        self.btn_foot_layout.add_widget(self.btn_plus)
+        self.btn_foot_layout.add_widget(self.btn_minus)
+        self.foot_layout.add_widget(self.num_foot_layout)
+        self.foot_layout.add_widget(self.btn_foot_layout)
+        self.foot_layout.add_widget(self.summa_input)
+        self.foot_layout.add_widget(self.clr_button)
+        self.main_layout.add_widget(self.foot_layout)
         return self.main_layout
 
     @staticmethod
