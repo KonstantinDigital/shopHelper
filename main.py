@@ -34,13 +34,13 @@ class MainApp(App):
         self.shop_card = self.create_shop_card()
         self.foot_layout = BoxLayout(size_hint=(1, .1))
         self.num_foot_layout = BoxLayout(orientation="vertical", size_hint=(.25, 1))
-        self.num_plus = TextInput(multiline=False, halign="right", font_size=20)
-        self.num_minus = TextInput(multiline=False, halign="right", font_size=20)
+        self.num_plus = TextInput(multiline=False, halign="right", font_size=17)
+        self.num_minus = TextInput(multiline=False, halign="right", font_size=17)
         self.btn_foot_layout = BoxLayout(orientation="vertical", size_hint=(.1, .98))
         self.btn_plus = Button(text="+", font_size=35, size_hint_y=.51)
         self.btn_minus = Button(text="-", font_size=70, size_hint_y=.49)
         self.summa_input = TextInput(multiline=False, readonly=True, halign="right", font_size=50, size_hint_x=.45)
-        self.clr_button = Button(text="Очистить", pos_hint={"center_x": 0.5, "center_y": 0.49},
+        self.clr_button = Button(text="Сброс", pos_hint={"center_x": 0.5, "center_y": 0.49},
                                  font_size=15, size_hint_x=.2)
 
     def build(self):
@@ -49,7 +49,7 @@ class MainApp(App):
         self.main_layout.add_widget(self.txt_variants)
         self.main_layout.add_widget(self.dept_input)
         for label in self.buttons:
-            button = Button(text=label, pos_hint={"center_x": 0.5, "center_y": 0.485}, font_size=20)
+            button = Button(text=label, pos_hint={"center_x": 0.5, "center_y": 0.498}, font_size=20)
             button.bind(on_press=self.on_button_press)
             self.btn_layout.add_widget(button)
         self.main_layout.add_widget(self.btn_layout)
