@@ -6,6 +6,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
+from kivy.uix.gridlayout import GridLayout
 
 
 EMPTY_PROD = "Введите название продукта"
@@ -26,8 +27,11 @@ class MainApp(App):
         self.dept_input.bind(focus=self.on_focus_dept)
         self.buttons = ["Добавить", "Очистить", "Удалить из базы"]
         self.btn_layout = BoxLayout(size_hint=(1, .1))
-        self.test_list = TextInput(multiline=True, readonly=True, halign="right", font_size=20, size_hint_y=None)
-        self.prod_list = ScrollView(size_hint=(1, .4))
+        # self.test_list = TextInput(multiline=True, readonly=True, halign="right", font_size=20, size_hint_y=None)
+        self.scr_prod_list = ScrollView(size_hint=(1, .4))
+        self.prod_list_layout = GridLayout(cols=1, size_hint_y=None)
+        self.prod_list_layout.bind(minimum_height=self.prod_list_layout.setter('height'))
+        self.shop_card = self.create_shop_card()
         self.foot_layout = BoxLayout(size_hint=(1, .2))
         self.num_foot_layout = BoxLayout(orientation="vertical", size_hint=(.25, 1))
         self.num_plus = TextInput(multiline=False, halign="right", font_size=20)
@@ -49,8 +53,12 @@ class MainApp(App):
             button.bind(on_press=self.on_button_press)
             self.btn_layout.add_widget(button)
         self.main_layout.add_widget(self.btn_layout)
-        self.prod_list.add_widget(self.test_list)
-        self.main_layout.add_widget(self.prod_list)
+        # self.prod_list.add_widget(self.test_list)
+        for purchase in self.shop_card:
+            btn_purchase = Button(text=purchase[0], font_size=20, size_hint_y=None)
+            self.prod_list_layout.add_widget(btn_purchase)
+        self.scr_prod_list.add_widget(self.prod_list_layout)
+        self.main_layout.add_widget(self.scr_prod_list)
         self.num_foot_layout.add_widget(self.num_plus)
         self.num_foot_layout.add_widget(self.num_minus)
         self.btn_foot_layout.add_widget(self.btn_plus)
@@ -79,6 +87,15 @@ class MainApp(App):
         else:
             if instance.text == "":
                 instance.text = EMPTY_DEPT
+
+    def create_shop_card(self):
+        try:
+            self.cur.execute("SELECT product_name FROM products JOIN shopping_card "
+                             "ON shopping_card.products_id = products.id;")
+            shop_card = self.cur.fetchall()
+            return shop_card
+        except Exception as err:
+            print(err)
 
     def on_button_press(self, instance):
         button_text = instance.text
@@ -112,8 +129,8 @@ class MainApp(App):
             self.conn = sqlite3.connect("shopping_db.db")
             self.cur = self.conn.cursor()
             return self.conn, self.cur
-        except Exception as e:
-            print(e)
+        except Exception as err:
+            print(err)
 
     def create_sql_table(self):
         self.cur.execute("CREATE TABLE IF NOT EXISTS products(id INTEGER PRIMARY KEY, product_name TEXT UNIQUE "
@@ -131,6 +148,7 @@ class MainApp(App):
         #         print("Значение NULL не допускается")
         #     else:
         #         print(err)
+
         self.conn.commit()
 
     def add_product(self):
