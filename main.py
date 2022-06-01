@@ -7,10 +7,11 @@ from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.gridlayout import GridLayout
-
+from kivy.core.window import Window
 
 EMPTY_PROD = "Введите название продукта"
 EMPTY_DEPT = "Введите название отдела"
+LABEL_WIDTH = Window.width - 20
 
 
 class MainApp(App):
@@ -18,26 +19,25 @@ class MainApp(App):
         super().__init__()
         self.conn, self.cur = self.sql_connection()
         self.main_layout = BoxLayout(orientation="vertical")
-        self.prod_input = TextInput(multiline=False, readonly=False, halign="right", font_size=20, size_hint_y=.1)
+        self.prod_input = TextInput(multiline=False, readonly=False, halign="right", font_size=16, size_hint_y=.05)
         self.prod_input.bind(text=self.on_text, focus=self.on_focus_prod)
-        self.txt_variants = TextInput(multiline=False, readonly=True, halign="right", font_size=20, disabled=False,
-                                      size_hint_y=.1)
+        self.txt_variants = TextInput(multiline=False, readonly=True, halign="right", font_size=16, disabled=False,
+                                      size_hint_y=.05)
         self.txt_variants.bind(on_double_tap=self.push_txt_variant)
-        self.dept_input = TextInput(multiline=False, readonly=False, halign="right", font_size=20, size_hint_y=.1)
+        self.dept_input = TextInput(multiline=False, readonly=False, halign="right", font_size=16, size_hint_y=.05)
         self.dept_input.bind(focus=self.on_focus_dept)
-        self.buttons = ["Добавить", "Очистить", "Удалить из базы"]
+        self.buttons = ["Удалить", "Очистить", "Добавить"]
         self.btn_layout = BoxLayout(size_hint=(1, .1))
-        # self.test_list = TextInput(multiline=True, readonly=True, halign="right", font_size=20, size_hint_y=None)
-        self.scr_prod_list = ScrollView(size_hint=(1, .4))
+        self.scr_prod_list = ScrollView(size_hint=(1, .55))
         self.prod_list_layout = GridLayout(cols=1, size_hint_y=None)
         self.prod_list_layout.bind(minimum_height=self.prod_list_layout.setter('height'))
         self.shop_card = self.create_shop_card()
-        self.foot_layout = BoxLayout(size_hint=(1, .2))
+        self.foot_layout = BoxLayout(size_hint=(1, .1))
         self.num_foot_layout = BoxLayout(orientation="vertical", size_hint=(.25, 1))
         self.num_plus = TextInput(multiline=False, halign="right", font_size=20)
         self.num_minus = TextInput(multiline=False, halign="right", font_size=20)
-        self.btn_foot_layout = BoxLayout(orientation="vertical", size_hint=(.1, .99))
-        self.btn_plus = Button(text="+", font_size=35, size_hint_y=.50)
+        self.btn_foot_layout = BoxLayout(orientation="vertical", size_hint=(.1, .98))
+        self.btn_plus = Button(text="+", font_size=35, size_hint_y=.51)
         self.btn_minus = Button(text="-", font_size=70, size_hint_y=.49)
         self.summa_input = TextInput(multiline=False, readonly=True, halign="right", font_size=50, size_hint_x=.45)
         self.clr_button = Button(text="Очистить", pos_hint={"center_x": 0.5, "center_y": 0.49},
@@ -49,13 +49,14 @@ class MainApp(App):
         self.main_layout.add_widget(self.txt_variants)
         self.main_layout.add_widget(self.dept_input)
         for label in self.buttons:
-            button = Button(text=label, pos_hint={"center_x": 0.5, "center_y": 0.485}, font_size=25)
+            button = Button(text=label, pos_hint={"center_x": 0.5, "center_y": 0.485}, font_size=20)
             button.bind(on_press=self.on_button_press)
             self.btn_layout.add_widget(button)
         self.main_layout.add_widget(self.btn_layout)
-        # self.prod_list.add_widget(self.test_list)
         for purchase in self.shop_card:
-            btn_purchase = Button(text=purchase[0], font_size=20, size_hint_y=None)
+            btn_purchase = Button(text=purchase[0], font_size=16, size_hint_y=None, height=30,
+                                  text_size=(LABEL_WIDTH, 24), halign="right", valign="top")
+            btn_purchase.bind(on_press=self.on_purchase_press)
             self.prod_list_layout.add_widget(btn_purchase)
         self.scr_prod_list.add_widget(self.prod_list_layout)
         self.main_layout.add_widget(self.scr_prod_list)
@@ -104,8 +105,20 @@ class MainApp(App):
         elif button_text == "Очистить":
             self.prod_input.text = EMPTY_PROD
             self.dept_input.text = EMPTY_DEPT
-        elif button_text == "Удалить из базы":
+        elif button_text == "Удалить":
             self.del_product()
+
+    def on_purchase_press(self, instance):
+        purchase = instance.text
+        try:
+            self.cur.execute("DELETE FROM shopping_card WHERE products_id = "
+                             "(SELECT shopping_card.products_id FROM shopping_card "
+                             "JOIN products ON shopping_card.products_id = products.id "
+                             "WHERE products.product_name = '{0}');".format(purchase))
+            self.conn.commit()
+            self.prod_list_layout.remove_widget(instance)
+        except Exception as err:
+            print(err)
 
     def on_text(self, instance, value):
         if value:
@@ -148,7 +161,6 @@ class MainApp(App):
         #         print("Значение NULL не допускается")
         #     else:
         #         print(err)
-
         self.conn.commit()
 
     def add_product(self):
@@ -182,6 +194,10 @@ class MainApp(App):
             self.cur.execute("""INSERT INTO shopping_card(products_id) 
                              VALUES((SELECT id FROM products WHERE product_name = {0}));""".format(product))
             self.conn.commit()
+            btn_purchase = Button(text=product.strip("'"), font_size=16, size_hint_y=None, height=30,
+                                  text_size=(LABEL_WIDTH, 24), halign="right", valign="top")
+            btn_purchase.bind(on_press=self.on_purchase_press)
+            self.prod_list_layout.add_widget(btn_purchase)
         except sqlite3.IntegrityError as err:
             if str(err).startswith("UNIQUE"):
                 print("Данный товар уже в списке покупок")
