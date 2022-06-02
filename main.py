@@ -8,10 +8,21 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.gridlayout import GridLayout
 from kivy.core.window import Window
+from kivy.uix.popup import Popup
+import re
 
 EMPTY_PROD = "Введите название продукта"
 EMPTY_DEPT = "Введите название отдела"
 LABEL_WIDTH = Window.width - 20
+
+
+class IntegerInput(TextInput):
+    pat = re.compile(r'\D')  # '[^0-9]'
+
+    def insert_text(self, substring, from_undo=False):
+        pat = self.pat
+        s = re.sub(pat, '', substring)
+        return super().insert_text(s, from_undo=from_undo)
 
 
 class MainApp(App):
@@ -34,14 +45,31 @@ class MainApp(App):
         self.shop_card = self.create_shop_card()
         self.foot_layout = BoxLayout(size_hint=(1, .1))
         self.num_foot_layout = BoxLayout(orientation="vertical", size_hint=(.25, 1))
-        self.num_plus = TextInput(multiline=False, halign="right", font_size=17)
-        self.num_minus = TextInput(multiline=False, halign="right", font_size=17)
+        self.num_plus = IntegerInput(multiline=False, text="0", halign="right", font_size=17)
+        self.num_plus.bind(focus=self.on_focus_input_price)
+        self.num_minus = IntegerInput(multiline=False, text="0", halign="right", font_size=17)
+        self.num_minus.bind(focus=self.on_focus_input_price)
         self.btn_foot_layout = BoxLayout(orientation="vertical", size_hint=(.1, .98))
         self.btn_plus = Button(text="+", font_size=35, size_hint_y=.51)
+        self.btn_plus.bind(on_press=self.btn_plus_minus)
         self.btn_minus = Button(text="-", font_size=70, size_hint_y=.49)
-        self.summa_input = TextInput(multiline=False, readonly=True, halign="right", font_size=50, size_hint_x=.45)
+        self.btn_minus.bind(on_press=self.btn_plus_minus)
+        self.total_amount = TextInput(multiline=False, text="0", readonly=True, halign="right",
+                                      font_size=50, size_hint_x=.45)
         self.clr_button = Button(text="Сброс", pos_hint={"center_x": 0.5, "center_y": 0.49},
                                  font_size=15, size_hint_x=.2)
+        self.clr_button.bind(on_press=self.clear_shopping_card)
+        self.popup_content = BoxLayout(orientation="vertical")
+        self.input_price = IntegerInput(multiline=False, text="0", halign="right", font_size=28,
+                                     size_hint_y=.4, pos_hint={"center_x": .5, "center_y": .8})
+        self.input_price.bind(focus=self.on_focus_input_price)
+        self.btn_price_box = BoxLayout(size_hint_y=.6)
+        self.btn_add_price = Button(text="Купить", font_size=15, size_hint_x=.5)
+        self.btn_add_price.bind(on_press=self.on_press_popup_btn)
+        self.btn_cancel_price = Button(text="Отмена", font_size=15, size_hint_x=.5)
+        self.btn_cancel_price.bind(on_press=self.on_press_popup_btn)
+        self.popup = Popup(size_hint=(.6, .3), content=self.popup_content)
+        self.current_purchase = None
 
     def build(self):
         self.create_sql_table()
@@ -56,7 +84,7 @@ class MainApp(App):
         for purchase in self.shop_card:
             btn_purchase = Button(text=purchase[0], font_size=16, size_hint_y=None, height=30,
                                   text_size=(LABEL_WIDTH, 24), halign="right", valign="top")
-            btn_purchase.bind(on_press=self.on_purchase_press)
+            btn_purchase.bind(on_press=self.popup_add_price)
             self.prod_list_layout.add_widget(btn_purchase)
         self.scr_prod_list.add_widget(self.prod_list_layout)
         self.main_layout.add_widget(self.scr_prod_list)
@@ -64,12 +92,49 @@ class MainApp(App):
         self.num_foot_layout.add_widget(self.num_minus)
         self.btn_foot_layout.add_widget(self.btn_plus)
         self.btn_foot_layout.add_widget(self.btn_minus)
+        self.foot_layout.add_widget(self.clr_button)
         self.foot_layout.add_widget(self.num_foot_layout)
         self.foot_layout.add_widget(self.btn_foot_layout)
-        self.foot_layout.add_widget(self.summa_input)
-        self.foot_layout.add_widget(self.clr_button)
+        self.foot_layout.add_widget(self.total_amount)
+        self.popup_content.add_widget(self.input_price)
+        self.btn_price_box.add_widget(self.btn_cancel_price)
+        self.btn_price_box.add_widget(self.btn_add_price)
+        self.popup_content.add_widget(self.btn_price_box)
         self.main_layout.add_widget(self.foot_layout)
         return self.main_layout
+
+    def btn_plus_minus(self, instance):
+        action = instance.text
+        if action == "+":
+            self.total_amount.text = str(int(self.total_amount.text) + int(self.num_plus.text))
+            self.num_plus.text = "0"
+        elif action == "-":
+            self.total_amount.text = str(int(self.total_amount.text) - int(self.num_minus.text))
+            self.num_minus.text = "0"
+
+    def clear_shopping_card(self, instance):
+        self.cur.execute("DELETE FROM shopping_card;")
+        self.conn.commit()
+        self.total_amount.text = "0"
+        self.prod_list_layout.clear_widgets()
+
+    def popup_add_price(self, instance):
+        self.current_purchase = instance
+        self.popup.open()
+
+    def on_press_popup_btn(self, instance):
+        action = instance.text
+        if action == "Отмена":
+            self.popup.dismiss()
+        elif action == "Купить":
+            self.total_amount.text = str(int(self.total_amount.text) + int(self.input_price.text))
+            self.input_price.text = "0"
+            self.on_purchase_press(self.current_purchase)
+            self.popup.dismiss()
+
+    @staticmethod
+    def on_focus_input_price(instance, value):
+        instance.text = "" if value else "0"
 
     @staticmethod
     def on_focus_prod(instance, value):
