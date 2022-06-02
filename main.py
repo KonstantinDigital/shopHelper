@@ -261,7 +261,7 @@ class MainApp(App):
             self.conn.commit()
             btn_purchase = Button(text=product.strip("'"), font_size=16, size_hint_y=None, height=30,
                                   text_size=(LABEL_WIDTH, 24), halign="right", valign="top")
-            btn_purchase.bind(on_press=self.on_purchase_press)
+            btn_purchase.bind(on_press=self.popup_add_price)
             self.prod_list_layout.add_widget(btn_purchase)
         except sqlite3.IntegrityError as err:
             if str(err).startswith("UNIQUE"):
