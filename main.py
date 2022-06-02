@@ -61,7 +61,7 @@ class MainApp(App):
         self.clr_button.bind(on_press=self.clear_shopping_card)
         self.popup_content = BoxLayout(orientation="vertical")
         self.input_price = IntegerInput(multiline=False, text="0", halign="right", font_size=28,
-                                     size_hint_y=.4, pos_hint={"center_x": .5, "center_y": .8})
+                                        size_hint_y=.4, pos_hint={"center_x": .5, "center_y": .8})
         self.input_price.bind(focus=self.on_focus_input_price)
         self.btn_price_box = BoxLayout(size_hint_y=.6)
         self.btn_add_price = Button(text="Купить", font_size=15, size_hint_x=.5)
