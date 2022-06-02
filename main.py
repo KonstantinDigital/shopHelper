@@ -68,7 +68,7 @@ class MainApp(App):
         self.btn_add_price.bind(on_press=self.on_press_popup_btn)
         self.btn_cancel_price = Button(text="Отмена", font_size=15, size_hint_x=.5)
         self.btn_cancel_price.bind(on_press=self.on_press_popup_btn)
-        self.popup = Popup(size_hint=(.6, .3), content=self.popup_content)
+        self.popup = Popup(title="Цена товара", size_hint=(.6, .3), content=self.popup_content)
         self.current_purchase = None
 
     def build(self):
