@@ -157,7 +157,7 @@ class MainApp(App):
     def create_shop_card(self):
         try:
             self.cur.execute("SELECT product_name FROM products JOIN shopping_card "
-                             "ON shopping_card.products_id = products.id;")
+                             "ON shopping_card.products_id = products.id ORDER BY products.dept_name;")
             shop_card = self.cur.fetchall()
             return shop_card
         except Exception as err:
