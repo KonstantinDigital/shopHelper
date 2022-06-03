@@ -30,12 +30,14 @@ class MainApp(App):
         super().__init__()
         self.conn, self.cur = self.sql_connection()
         self.main_layout = BoxLayout(orientation="vertical")
-        self.prod_input = TextInput(multiline=False, readonly=False, halign="right", font_size=16, size_hint_y=.05)
+        self.prod_input = TextInput(multiline=False, text=EMPTY_PROD, readonly=False, halign="right", font_size=16,
+                                    size_hint_y=.05)
         self.prod_input.bind(text=self.on_text, focus=self.on_focus_prod)
         self.txt_variants = TextInput(multiline=False, readonly=True, halign="right", font_size=16, disabled=False,
                                       size_hint_y=.05)
         self.txt_variants.bind(on_double_tap=self.push_txt_variant)
-        self.dept_input = TextInput(multiline=False, readonly=False, halign="right", font_size=16, size_hint_y=.05)
+        self.dept_input = TextInput(multiline=False, text=EMPTY_DEPT, readonly=False, halign="right", font_size=16,
+                                    size_hint_y=.05)
         self.dept_input.bind(focus=self.on_focus_dept)
         self.buttons = ["Удалить", "Очистить", "Добавить"]
         self.btn_layout = BoxLayout(size_hint=(1, .1))
@@ -44,12 +46,9 @@ class MainApp(App):
         self.prod_list_layout.bind(minimum_height=self.prod_list_layout.setter('height'))
         self.shop_card = self.create_shop_card()
         self.foot_layout = BoxLayout(size_hint=(1, .1))
-        self.num_foot_layout = BoxLayout(orientation="vertical", size_hint=(.25, 1))
-        self.num_plus = IntegerInput(multiline=False, text="0", halign="right", font_size=17)
-        self.num_plus.bind(focus=self.on_focus_input_price)
-        self.num_minus = IntegerInput(multiline=False, text="0", halign="right", font_size=17)
-        self.num_minus.bind(focus=self.on_focus_input_price)
-        self.btn_foot_layout = BoxLayout(orientation="vertical", size_hint=(.1, .98))
+        self.num_plus_minus = IntegerInput(multiline=False, text="0", halign="right", font_size=50, size_hint=(.25, 1))
+        self.num_plus_minus.bind(focus=self.on_focus_input_price)
+        self.btn_foot_layout = BoxLayout(orientation="vertical", size_hint=(.1, 1))
         self.btn_plus = Button(text="+", font_size=35, size_hint_y=.51)
         self.btn_plus.bind(on_press=self.btn_plus_minus)
         self.btn_minus = Button(text="-", font_size=70, size_hint_y=.49)
@@ -73,6 +72,17 @@ class MainApp(App):
 
     def build(self):
         self.create_sql_table()
+        self.btn_foot_layout.add_widget(self.btn_plus)
+        self.btn_foot_layout.add_widget(self.btn_minus)
+        self.foot_layout.add_widget(self.clr_button)
+        self.foot_layout.add_widget(self.num_plus_minus)
+        self.foot_layout.add_widget(self.btn_foot_layout)
+        self.foot_layout.add_widget(self.total_amount)
+        self.popup_content.add_widget(self.input_price)
+        self.btn_price_box.add_widget(self.btn_cancel_price)
+        self.btn_price_box.add_widget(self.btn_add_price)
+        self.popup_content.add_widget(self.btn_price_box)
+        self.main_layout.add_widget(self.foot_layout)
         self.main_layout.add_widget(self.prod_input)
         self.main_layout.add_widget(self.txt_variants)
         self.main_layout.add_widget(self.dept_input)
@@ -82,35 +92,18 @@ class MainApp(App):
             self.btn_layout.add_widget(button)
         self.main_layout.add_widget(self.btn_layout)
         for purchase in self.shop_card:
-            btn_purchase = Button(text=purchase[0], font_size=16, size_hint_y=None, height=30,
+            btn_purchase = Button(text=purchase[0], font_size=30, size_hint_y=None, height=50,
                                   text_size=(LABEL_WIDTH, 24), halign="right", valign="top")
             btn_purchase.bind(on_press=self.popup_add_price)
             self.prod_list_layout.add_widget(btn_purchase)
         self.scr_prod_list.add_widget(self.prod_list_layout)
         self.main_layout.add_widget(self.scr_prod_list)
-        self.num_foot_layout.add_widget(self.num_plus)
-        self.num_foot_layout.add_widget(self.num_minus)
-        self.btn_foot_layout.add_widget(self.btn_plus)
-        self.btn_foot_layout.add_widget(self.btn_minus)
-        self.foot_layout.add_widget(self.clr_button)
-        self.foot_layout.add_widget(self.num_foot_layout)
-        self.foot_layout.add_widget(self.btn_foot_layout)
-        self.foot_layout.add_widget(self.total_amount)
-        self.popup_content.add_widget(self.input_price)
-        self.btn_price_box.add_widget(self.btn_cancel_price)
-        self.btn_price_box.add_widget(self.btn_add_price)
-        self.popup_content.add_widget(self.btn_price_box)
-        self.main_layout.add_widget(self.foot_layout)
         return self.main_layout
 
     def btn_plus_minus(self, instance):
         action = instance.text
-        if action == "+":
-            self.total_amount.text = str(int(self.total_amount.text) + int(self.num_plus.text))
-            self.num_plus.text = "0"
-        elif action == "-":
-            self.total_amount.text = str(int(self.total_amount.text) - int(self.num_minus.text))
-            self.num_minus.text = "0"
+        self.total_amount.text = str(eval(self.total_amount.text + action + self.num_plus_minus.text))
+        self.num_plus_minus.text = "0"
 
     def clear_shopping_card(self, instance):
         self.cur.execute("DELETE FROM shopping_card;")
@@ -134,7 +127,12 @@ class MainApp(App):
 
     @staticmethod
     def on_focus_input_price(instance, value):
-        instance.text = "" if value else "0"
+        if value:
+            if instance.text == "0":
+                instance.text = ""
+        else:
+            if instance.text == "":
+                instance.text = "0"
 
     @staticmethod
     def on_focus_prod(instance, value):
