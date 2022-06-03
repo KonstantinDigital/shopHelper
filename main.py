@@ -259,8 +259,8 @@ class MainApp(App):
             self.cur.execute("""INSERT INTO shopping_card(products_id) 
                              VALUES((SELECT id FROM products WHERE product_name = {0}));""".format(product))
             self.conn.commit()
-            btn_purchase = Button(text=product.strip("'"), font_size=16, size_hint_y=None, height=30,
-                                  text_size=(LABEL_WIDTH, 24), halign="right", valign="top")
+            btn_purchase = Button(text=product.strip("'"), font_size=30, size_hint_y=None, height=50,
+                                  text_size=(LABEL_WIDTH, 40), halign="right", valign="top")
             btn_purchase.bind(on_press=self.popup_add_price)
             self.prod_list_layout.add_widget(btn_purchase)
         except sqlite3.IntegrityError as err:
