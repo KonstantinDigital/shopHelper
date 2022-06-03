@@ -30,13 +30,13 @@ class MainApp(App):
         super().__init__()
         self.conn, self.cur = self.sql_connection()
         self.main_layout = BoxLayout(orientation="vertical")
-        self.prod_input = TextInput(multiline=False, text=EMPTY_PROD, readonly=False, halign="right", font_size=16,
+        self.prod_input = TextInput(multiline=False, text=EMPTY_PROD, readonly=False, halign="right", font_size=40,
                                     size_hint_y=.05)
         self.prod_input.bind(text=self.on_text, focus=self.on_focus_prod)
-        self.txt_variants = TextInput(multiline=False, readonly=True, halign="right", font_size=16, disabled=False,
+        self.txt_variants = TextInput(multiline=False, readonly=True, halign="right", font_size=40, disabled=False,
                                       size_hint_y=.05)
         self.txt_variants.bind(on_double_tap=self.push_txt_variant)
-        self.dept_input = TextInput(multiline=False, text=EMPTY_DEPT, readonly=False, halign="right", font_size=16,
+        self.dept_input = TextInput(multiline=False, text=EMPTY_DEPT, readonly=False, halign="right", font_size=40,
                                     size_hint_y=.05)
         self.dept_input.bind(focus=self.on_focus_dept)
         self.buttons = ["Удалить", "Очистить", "Добавить"]
@@ -56,16 +56,16 @@ class MainApp(App):
         self.total_amount = TextInput(multiline=False, text="0", readonly=True, halign="right",
                                       font_size=50, size_hint_x=.45)
         self.clr_button = Button(text="Сброс", pos_hint={"center_x": 0.5, "center_y": 0.49},
-                                 font_size=15, size_hint_x=.2)
+                                 font_size=40, size_hint_x=.2)
         self.clr_button.bind(on_press=self.clear_shopping_card)
         self.popup_content = BoxLayout(orientation="vertical")
-        self.input_price = IntegerInput(multiline=False, text="0", halign="right", font_size=28,
+        self.input_price = IntegerInput(multiline=False, text="0", halign="right", font_size=50,
                                         size_hint_y=.4, pos_hint={"center_x": .5, "center_y": .8})
         self.input_price.bind(focus=self.on_focus_input_price)
         self.btn_price_box = BoxLayout(size_hint_y=.6)
-        self.btn_add_price = Button(text="Купить", font_size=15, size_hint_x=.5)
+        self.btn_add_price = Button(text="Купить", font_size=40, size_hint_x=.5)
         self.btn_add_price.bind(on_press=self.on_press_popup_btn)
-        self.btn_cancel_price = Button(text="Отмена", font_size=15, size_hint_x=.5)
+        self.btn_cancel_price = Button(text="Отмена", font_size=40, size_hint_x=.5)
         self.btn_cancel_price.bind(on_press=self.on_press_popup_btn)
         self.popup = Popup(title="Цена товара", size_hint=(.6, .3), content=self.popup_content)
         self.current_purchase = None
@@ -87,13 +87,13 @@ class MainApp(App):
         self.main_layout.add_widget(self.txt_variants)
         self.main_layout.add_widget(self.dept_input)
         for label in self.buttons:
-            button = Button(text=label, pos_hint={"center_x": 0.5, "center_y": 0.498}, font_size=20)
+            button = Button(text=label, pos_hint={"center_x": 0.5, "center_y": 0.498}, font_size=40)
             button.bind(on_press=self.on_button_press)
             self.btn_layout.add_widget(button)
         self.main_layout.add_widget(self.btn_layout)
         for purchase in self.shop_card:
             btn_purchase = Button(text=purchase[0], font_size=30, size_hint_y=None, height=50,
-                                  text_size=(LABEL_WIDTH, 24), halign="right", valign="top")
+                                  text_size=(LABEL_WIDTH, 40), halign="right", valign="top")
             btn_purchase.bind(on_press=self.popup_add_price)
             self.prod_list_layout.add_widget(btn_purchase)
         self.scr_prod_list.add_widget(self.prod_list_layout)
@@ -102,6 +102,7 @@ class MainApp(App):
 
     def btn_plus_minus(self, instance):
         action = instance.text
+        self.num_plus_minus.text = self.num_plus_minus.text if self.num_plus_minus.text else "0"
         self.total_amount.text = str(eval(self.total_amount.text + action + self.num_plus_minus.text))
         self.num_plus_minus.text = "0"
 
@@ -120,6 +121,7 @@ class MainApp(App):
         if action == "Отмена":
             self.popup.dismiss()
         elif action == "Купить":
+            self.input_price.text = self.input_price.text if self.input_price.text else "0"
             self.total_amount.text = str(int(self.total_amount.text) + int(self.input_price.text))
             self.input_price.text = "0"
             self.on_purchase_press(self.current_purchase)
